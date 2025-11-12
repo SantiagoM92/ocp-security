@@ -1,0 +1,16 @@
+serviceAccount:
+  create: true
+  name: cicd-serviceaccount
+  annotations: {}
+
+clusterRoleBinding:
+  enabled: true
+  name: cicd-binding
+  clusterRoleName: edit
+  apiGroup: rbac.authorization.k8s.io
+
+roleBinding:
+  enabled: true
+  name: cicd-binding-rbac
+  roleName: rbac-edit
+  apiGroup: rbac.authorization.k8s.io

@@ -1,0 +1,66 @@
+name: Deploy OCP Security RBAC
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'helm/ocp-security/**'
+      - '.github/workflows/deploy-rbac.yaml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HELM_CHART_PATH: helm/ocp-security
+      RELEASE_NAME: cicd-rbac
+      TARGET_NAMESPACE: ${{ secrets.OPENSHIFT_NAMESPACE }}
+      OPENSHIFT_SERVER: ${{ secrets.OPENSHIFT_SERVER }}
+      OPENSHIFT_TOKEN: ${{ secrets.OPENSHIFT_TOKEN }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v3
+
+      - name: Configurar kubeconfig
+        run: |
+          for var in TARGET_NAMESPACE OPENSHIFT_SERVER OPENSHIFT_TOKEN; do
+            if [ -z "${!var}" ]; then
+              echo "El secreto $var no está definido" >&2
+              exit 1
+            fi
+          done
+
+          mkdir -p ~/.kube
+          cat <<EOF > ~/.kube/config
+apiVersion: v1
+clusters:
+- cluster:
+    server: ${OPENSHIFT_SERVER}
+    insecure-skip-tls-verify: true
+  name: ocp-cluster
+contexts:
+- context:
+    cluster: ocp-cluster
+    namespace: ${TARGET_NAMESPACE}
+    user: github-actions
+  name: ocp-context
+current-context: ocp-context
+kind: Config
+preferences: {}
+users:
+- name: github-actions
+  user:
+    token: ${OPENSHIFT_TOKEN}
+EOF
+
+      - name: Deploy chart
+        run: |
+          helm upgrade --install "$RELEASE_NAME" "$HELM_CHART_PATH" \
+            --namespace "$TARGET_NAMESPACE" \
+            --create-namespace
