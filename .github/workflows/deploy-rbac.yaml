@@ -38,26 +38,26 @@ jobs:
 
           mkdir -p ~/.kube
           cat <<EOF > ~/.kube/config
-apiVersion: v1
-clusters:
-- cluster:
-    server: ${OPENSHIFT_SERVER}
-    insecure-skip-tls-verify: true
-  name: ocp-cluster
-contexts:
-- context:
-    cluster: ocp-cluster
-    namespace: ${TARGET_NAMESPACE}
-    user: github-actions
-  name: ocp-context
-current-context: ocp-context
-kind: Config
-preferences: {}
-users:
-- name: github-actions
-  user:
-    token: ${OPENSHIFT_TOKEN}
-EOF
+          apiVersion: v1
+          clusters:
+          - cluster:
+              server: ${OPENSHIFT_SERVER}
+              insecure-skip-tls-verify: true
+            name: ocp-cluster
+          contexts:
+          - context:
+              cluster: ocp-cluster
+              namespace: ${TARGET_NAMESPACE}
+              user: github-actions
+            name: ocp-context
+          current-context: ocp-context
+          kind: Config
+          preferences: {}
+          users:
+          - name: github-actions
+            user:
+              token: ${OPENSHIFT_TOKEN}
+          EOF
 
       - name: Deploy chart
         run: |
